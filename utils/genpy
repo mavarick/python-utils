@@ -1,0 +1,18 @@
+#!/bin/bash
+# create py file with head
+:<<!
+#!/usr/bin/env python
+#encoding:utf8
+!
+if [ $# -lt 1 ]; then
+    echo "Error: No file specified "
+    exit 
+fi
+
+if [ -f "$1" ]; then
+    echo "Warn: file[$1] exists, Pay cautions with it"
+else
+    echo "#!/usr/bin/env python" > $1
+    echo "#encoding:utf8" >> $1
+    echo "File $1 Created"
+fi
