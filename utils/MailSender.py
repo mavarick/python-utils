@@ -45,16 +45,4 @@ class MailSender(object):
     def __del__(self):
         self.quit()
 
-def test():
-    server = "10.181.10.20:25"
-    str_from = "noreply@creditease.cn"
-    str_to =  "xufengliu@creditease.cn"
-
-    sub = "test"
-    content = "test"
-    ms = MailSender(server, user='', password= '')
-    ms.send_mail(str_from, str_to, sub, content)
-
-if __name__ == "__main__":
-    test()
 

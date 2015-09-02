@@ -27,14 +27,14 @@ class SimpleMailSender(object):
         self.client.close()
     
 if __name__ == "__main__":
-    host = "10.181.10.20"
+    host = "127.0.0.1"
     port = 25
     sms = SimpleMailSender(host, port)
 
     #strfrom = "noreply@creditease.cn"
-    strfrom = "xufengliu@creditease.cn"
+    strfrom = "***@***"
 
-    strto = "xufengliu@creditease.cn"
+    strto = "***@***"
 
     sub = "Test"
     content = "this is one test"
