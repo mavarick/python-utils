@@ -109,7 +109,9 @@ apps = [(r'/', JsonWatcher)]
 
 print "PORT: %s"%port
 application = tornado.web.Application(apps)
-application.listen(port)
+application.listen(port, address="localhost")
+# to bind the out-put address
+
 tornado.ioloop.IOLoop.instance().start()
 
 
