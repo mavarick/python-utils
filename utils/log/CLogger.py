@@ -7,6 +7,7 @@
 2，更改日志存储方式；按天等等
 
 """
+import pdb
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -14,22 +15,34 @@ from logging.handlers import TimedRotatingFileHandler
 
 ###############################################################################
 # console, rfile, rtfile
-LOGGER_NAME = "console"
-# LOGGER_NAME = "rfile"
+
+# LOGGER_NAME = "console"
+
+# LOGGER_NAME = "rtfile"
+logger_names = ["console", "rfile"]
+formater = "detail"  # empty, simple, detail
+logger_info = {
+    "log_path": "./run.log",
+    "backupCount": 30,
+    "interval": 1,
+    "when": "midnight",
+    'level': logging.NOTSET  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+}
 
 # set parameters, if use `rfile`, `rtfile`
-LOG_PATH = "./run.log"
-LOG_FILE_CNT = 30
+# LOG_PATH = "/tmp/cvparser_log/couch/run.log"
+# LOG_FILE_CNT = 30
 
 ###############################################################################
 
 # logger without configure file
+EMPTY_FORMATER = ""  # used to simply print log info
 DETAIL_FORMATER = "%(asctime)s %(levelname)-8s %(name)s[%(filename)s: %(lineno)3d]: %(message)s"
 SIMPLE_FORMATER = "%(levelname)-8s %(name)s[%(filename)s: %(lineno)3d]: %(message)s"
 # FORMATER = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
-CONSOLE_LOGGER_NAME = "console"      # console
-ROTATING_FILE_LOGGER_NAME = 'rfile'  # rotate file
+# CONSOLE_LOGGER_NAME = "console"      # console
+# ROTATING_FILE_LOGGER_NAME = 'rfile'  # rotate file
 
 # logging.basicConfig(level=logging.DEBUG,
                 # format=DETAIL_FORMATER,
@@ -37,66 +50,84 @@ ROTATING_FILE_LOGGER_NAME = 'rfile'  # rotate file
                 # filename='run.log',
                 # filemode='w'
 # )
+# logging.basicConfig(level=logging.DEBUG)
 
-def initiate_console_logger(logger_name):
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.DEBUG)
-    # def initiate_console_logger(logger_name):
+FORMATER = {
+    "empty": EMPTY_FORMATER,
+    "simple": SIMPLE_FORMATER,
+    "detail": DETAIL_FORMATER
+}.get(formater, EMPTY_FORMATER)
+
+
+LOGGER_NAMES = set()
+LOGGER_HANDLER_DICT = {}
+
+logger_name = "console"
+def get_console_handler(*args, **kargs):
     ch = logging.StreamHandler()
-    # console.setLevel(logging.DEBUG)
-    ch.setLevel(logging.DEBUG)
-
-    formatter = logging.Formatter(DETAIL_FORMATER)
+    ch.setLevel(logging.INFO)
+    formatter = logging.Formatter(FORMATER)
     ch.setFormatter(formatter)
+    return ch
+LOGGER_NAMES.add(logger_name)
+LOGGER_HANDLER_DICT[logger_name] = get_console_handler
 
-    logger.addHandler(ch)
-    return logger
 
+logger_name = "rfile"
+def get_rfile_handler(*args, **kwargs):
+    log_path = kwargs.get("log_path", "./run.log")
+    backupCount = kwargs.get("backupCount", 30)
+    maxBytes = kwargs.get("maxBytes", 10*1024*1024)
 
-def initiate_rfile_logger(logger_name, **kargs):
-    '''
-    params :: log_path, log path
-    params :: bak_log_cnt，log file cnt
-    '''
-    log_path = kargs.get("log_path", "./run.log")
-    bak_log_cnt = kargs.get("bak_log_cnt", 30)
-
-    Rthandler = RotatingFileHandler(log_path, maxBytes=10*1024*1024,backupCount=bak_log_cnt)
+    Rthandler = RotatingFileHandler(log_path, maxBytes=maxBytes, backupCount=backupCount)
     Rthandler.setLevel(logging.INFO)
-    formatter = logging.Formatter(DETAIL_FORMATER)
+    formatter = logging.Formatter(FORMATER)
     Rthandler.setFormatter(formatter)
-    logger = logging.getLogger(ROTATING_FILE_LOGGER_NAME)
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(Rthandler)
-    return logger
+    return Rthandler
+LOGGER_NAMES.add(logger_name)
+LOGGER_HANDLER_DICT[logger_name] = get_rfile_handler
 
 
-def initiate_rtfile_logger(logger_name, **kargs):
-    ''' rotated file handler
-    params :: log_path, log path
-    params :: bak_log_cnt，log file cnt
-    '''
-    log_path = kargs.get("log_path", "./run.log")
-    bak_log_cnt = kargs.get("bak_log_cnt", 30)
+logger_name = "rtfile"
+def get_rtfile_handler(*args, **kwargs):
+    log_path = kwargs.get("log_path", "./run.log")
+    backupCount = kwargs.get("backupCount", 30)
+    interval = kwargs.get("interval", 1)
+    when = kwargs.get("when", "midnight")
 
-    Rthandler = TimedRotatingFileHandler(log_path, when="midnight", interval=1, backupCount=bak_log_cnt)
+    Rthandler = TimedRotatingFileHandler(log_path, when=when, interval=interval, backupCount=backupCount)
     Rthandler.setLevel(logging.INFO)
-    formatter = logging.Formatter(DETAIL_FORMATER)
+    formatter = logging.Formatter(FORMATER)
     Rthandler.setFormatter(formatter)
-    logger = logging.getLogger(ROTATING_FILE_LOGGER_NAME)
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(Rthandler)
-    return logger
+    return Rthandler
+LOGGER_NAMES.add(logger_name)
+LOGGER_HANDLER_DICT[logger_name] = get_rtfile_handler
 
 
-if LOGGER_NAME == "console":
-    logger = initiate_console_logger(LOGGER_NAME)
-elif LOGGER_NAME == "rfile":
-    logger = initiate_rfile_logger(LOGGER_NAME, log_path=LOG_PATH, bak_log_cnt=LOG_FILE_CNT)
-elif LOGGER_NAME == 'rtfile':
-    logger = initiate_rtfile_logger(LOGGER_NAME, log_path=LOG_PATH, bak_log_cnt=LOG_FILE_CNT)
+def init_logger(logger_names, level=logging.INFO, **kargs):
+    '''
+    params:: log_path: string. for log: rfile, rtfile.
+    params:: backupCount: int. for rfile, rtfile.
+    params:: maxBytes: for rfile.
+    params:: interval: for rtfile.
+    params:: when: for rtfile
+    '''
+    _logger = logging.getLogger()
+    _logger.setLevel(level)
+    for logger_name in logger_names:
+        assert logger_name in LOGGER_NAMES, \
+            "logger name[%s] must be one of [%s]"%(logger_name, ','.join(LOGGER_NAMES))
+        handler = LOGGER_HANDLER_DICT[logger_name](**kargs)
+        _logger.addHandler(handler)
+    return _logger
+
+
+logger = init_logger(logger_names, **logger_info)
+
+if not logger:
+    raise Exception("logger is None")
 
 if __name__ == "__main__":
     logger.info("ttttttt")
-    logger.warning("ttttttt")
+    # logger.warning("ttttttt")
 
