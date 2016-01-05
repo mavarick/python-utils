@@ -20,7 +20,9 @@ from logging.handlers import TimedRotatingFileHandler
 
 # LOGGER_NAME = "rtfile"
 logger_names = ["console", "rfile"]
+# for formatter
 formater = "detail"  # empty, simple, detail
+# for detail information of configuration
 logger_info = {
     "log_path": "./run.log",
     "backupCount": 30,
@@ -29,28 +31,13 @@ logger_info = {
     'level': logging.NOTSET  # DEBUG, INFO, WARNING, ERROR, CRITICAL
 }
 
-# set parameters, if use `rfile`, `rtfile`
-# LOG_PATH = "/tmp/cvparser_log/couch/run.log"
-# LOG_FILE_CNT = 30
-
 ###############################################################################
-
 # logger without configure file
 EMPTY_FORMATER = ""  # used to simply print log info
 DETAIL_FORMATER = "%(asctime)s %(levelname)-8s %(name)s[%(filename)s: %(lineno)3d]: %(message)s"
 SIMPLE_FORMATER = "%(levelname)-8s %(name)s[%(filename)s: %(lineno)3d]: %(message)s"
 # FORMATER = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
-# CONSOLE_LOGGER_NAME = "console"      # console
-# ROTATING_FILE_LOGGER_NAME = 'rfile'  # rotate file
-
-# logging.basicConfig(level=logging.DEBUG,
-                # format=DETAIL_FORMATER,
-                # datefmt='%Y-%m-%d %H:%M:%S',  #'%a, %d %b %Y %H:%M:%S',
-                # filename='run.log',
-                # filemode='w'
-# )
-# logging.basicConfig(level=logging.DEBUG)
 
 FORMATER = {
     "empty": EMPTY_FORMATER,
