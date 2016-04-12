@@ -45,6 +45,7 @@ def test():
     tran = TranslateAPI.translate(text)
     print text
     print ">> [%s]"%tran
+    print "ok"
 
 if __name__ == "__main__":
     test()
