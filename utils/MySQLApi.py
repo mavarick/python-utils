@@ -5,30 +5,53 @@ Mysql api
 
 import MySQLdb
 
-class MysqlApi(object):
-    def __init__(self):
-        self.conn = None
-        self.cursor = None
-    def Connect(self, host, port, user, passwd, db, charset = None):
-        '''链接MYSQL'''
-        charset = (charset is None) and 'utf8' or charset
-        self.conn = MySQLdb.connect(host = host, db = db,
-                        user = user, port = port, passwd = passwd,
-                        charset = charset, use_unicode='True')
+class MySQLApi(object):
+    def __init__(self, config):
+        self.config = config
+        self.Connect()
+
+    def Connect(self):
+        host = self.config.get("host", "127.0.0.1")
+        port = self.config.get("port", 3306)
+        db = self.config['db']
+        user = self.config.get("user", "root")
+        passwd = self.config.get("passwd", "")
+        charset = self.config.get("charset", "utf8")
+
+        conn = MySQLdb.connect(host=host, db=db,
+                        user=user, port=port, passwd=passwd,
+                        charset=charset, use_unicode='True')
+        self.conn = conn
         self.cursor = self.conn.cursor()
-        #self.get_cursor()
 
     def get_cursor(self):
+        if not self.is_alive():
+            self.Connect()
         if not self.cursor:
             self.cursor = self.conn.cursor()
+        return self.cursor
 
-    def execute(self, sql):
+    def is_alive(self):
+        flag = 0
+        try:
+            self.conn.ping()
+            flag = 1
+        except Exception, ex:
+            pass
+        return flag
+
+    def execute(self, sql, args=None):
         '执行Mysql Sql语句'
         self.get_cursor()
-        #print sql
-        self.cursor.execute(sql)
-        self.conn.commit()
-    
+        self.cursor.execute(sql, args)
+        self.commit()
+
+    def executemany(self, sql, args=None):
+        '执行Mysql Sql语句'
+        self.get_cursor()
+        self.cursor.executemany(sql, args)
+        self.commit()
+
     def commit(self):
         self.conn.commit()
 
@@ -68,10 +91,11 @@ class MysqlApi(object):
         sql = "select %s INTO OUTFILE '%s' FIELDS TERMINATED BY '%s' " \
                 "OPTIONALLY ENCLOSED BY '' LINES TERMINATED BY '\\n' " \
                 "FROM %s" % (','.join(fields), filepath, field_term, tablename)
+        print sql
         self.execute(sql)
-    
+
     def is_table_exist(self, tablename):
-        """ check weather table is exist 
+        """ check weather table is exist
         """
         sql = "show tables"
         self.execute(sql)
@@ -80,15 +104,6 @@ class MysqlApi(object):
             tables.append(str(item[0]))
         return tablename in tables
 
-    def isAlive(self):
-        '''检查链接是否存活'''
-        flag = 0
-        try:
-            self.conn.ping()
-            flag = 1
-        except Exception, ex:
-            pass
-        return flag
     def close(self):
         '''close the connection'''
         if self.cursor:
@@ -97,14 +112,16 @@ class MysqlApi(object):
 
 
 def __test__():
-    host = '127.0.0.1'
-    port = 3306
-    user = 'root'
-    password = ''
-    charset = 'utf8'
-    db = 'liuxf'
-    t = MysqlApi()
-    t.Connect(host, port , user, password, db, charset)
+    config = dict(host='127.0.0.1', port=3306, user='root', passwd="", db="test")
+    t = MySQLApi(config)
+    create_sql = '''
+    CREATE TABLE if not exists `test` (
+`id`  integer NOT NULL ,
+`data`  varchar(128) NULL ,
+PRIMARY KEY (`id`)
+)
+    '''
+    t.execute(create_sql)
     print t
     items =[(1, 'http://www.cz88.net/proxy/index.aspx'), (2, 'http://www.cz88.net/proxy/http_2.aspx'), (3,
 'http://www.cz88.net/proxy/http_3.aspx'), (4, 'http://www.cz88.net/proxy/http_4.aspx'), (5,
@@ -120,7 +137,7 @@ def __test__():
 'http://www.site-digger.com/html/articles/20110516/proxieslist.html'), (25,
 'http://www.free998.net/daili/httpdaili/8949.html'), (26, 'http://www.free998.net/daili/httpdaili/8949_2.html'), (27,
 'http://www.free998.net/daili/httpdaili/8949_3.html'), (29, 'http://www.free998.net/daili/httpdaili/8947.html')]
-    sql = "insert ignore into url(id, url) values(%s, '%s')" 
+    sql = "insert ignore into test(id, data) values(%s, '%s')"
     for item in items:
         sql_item = sql % tuple(item)
         print sql_item

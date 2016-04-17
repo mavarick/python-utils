@@ -37,9 +37,6 @@ class ESApi(object):
     def create_index(self, index_name):
         self.conn.indices.create_index(index_name)
 
-    def exists_index(self, index_name):
-        return self.conn.indices.exists_index(index_name)
-
     def put_mappings(self, **kargs):
         # doc_type, mapping, indices
         self.conn.indices.put_mapping(**kargs)
@@ -53,8 +50,8 @@ class ESApi(object):
     def delete(self, index, doc_type, id, **kargs):
         self.conn.delete(index=index, doc_type=doc_type, id=id, **kargs)
 
-    def get(self, id):
-        self.conn.get(self.index, self.doc_type, id)
+    def get(self, **kargs):
+        pass
 
     def fetchall(self, index, doc_type):
         results = self.conn.search(MatchAllQuery(), indices=index, doc_types=doc_type, scan=True)
