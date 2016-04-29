@@ -18,8 +18,8 @@ class ESApi(object):
         self.config = config
         self.host = self.config['host']
         self.port = self.config['port']
-        self.index = self.config['index']
-        self.doc_type = self.config['doc_type']
+        # self.index = self.config['index']
+        # self.doc_type = self.config['doc_type']
         # self.schema = self.config['schema']
         # self.buld_size = self.config['bulk_size']
         self.conn = None
@@ -28,14 +28,19 @@ class ESApi(object):
     def Connect(self):
         self.conn = ES("%s:%s"%(self.host, self.port), timeout=10)
 
-    def insert(self, id, data, bulk=True):
-        self.conn.index(data, self.index, self.doc_type, id=id, bulk=True)
+    def insert(self, index, doc_type, id, data, bulk=True):
+        # self.conn.index(data, self.index, self.doc_type, id=id, bulk=True)
+        self.conn.index(data, index, doc_type, id=id, bulk=True)
 
-    def update(self, id, data, **kargs):
-        self.conn.update(self.index, self.doc_type, id, document=data, **kargs)
+    def update(self, index, doc_type, id, document, **kargs):
+        # self.conn.update(self.index, self.doc_type, id, document=data, **kargs)
+        self.conn.update(index, doc_type, id, document=document, **kargs)
 
     def create_index(self, index_name):
         self.conn.indices.create_index(index_name)
+
+    def exists_index(self, index_name):
+        return self.conn.indices.exists_index(index_name)
 
     def put_mappings(self, **kargs):
         # doc_type, mapping, indices
@@ -45,16 +50,29 @@ class ESApi(object):
         self.conn.indices.delete_mapping(index, doc_type)
 
     def delete_index(self, index):
-        self.conn.indices.delete_index(index)
+        if self.exists_index(index):
+            print "delete index: [%s]"%index
+            self.conn.indices.delete_index(index)
+        else:
+            print "index: [%s] does not exist"%index
+
+    def exists(self, index, doc_type, id, **kwargs):
+        return self.conn.exists(index, doc_type, id, **kwargs)
 
     def delete(self, index, doc_type, id, **kargs):
         self.conn.delete(index=index, doc_type=doc_type, id=id, **kargs)
 
-    def get(self, **kargs):
-        pass
+    def get(self, index, doc_type, id):
+        # self.conn.get(self.index, self.doc_type, id)
+        return self.conn.get(index, doc_type, id)
 
     def fetchall(self, index, doc_type):
         results = self.conn.search(MatchAllQuery(), indices=index, doc_types=doc_type, scan=True)
+        for r in results:
+            yield r
+
+    def search(self, index, doc_type, query, **kargs):
+        results = self.conn.search(query, indices=index, doc_types=doc_type, scan=True, **kargs)
         for r in results:
             yield r
 
