@@ -115,3 +115,5 @@ set encoding=utf-8
 
 " no backup which postfixed with ~
 set nobackup
+
+highlight Comment ctermfg=green guifg=green
