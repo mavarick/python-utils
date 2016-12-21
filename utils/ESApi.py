@@ -13,6 +13,7 @@ doc_type
 schema: {}
 '''
 
+
 class ESApi(object):
     def __init__(self, config):
         self.config = config
@@ -99,3 +100,12 @@ class ESApi(object):
 '''
 
 
+def test():
+    config = {
+        "host": "114.215.222.49",
+        "port": 9200,
+    }
+    conn = ES(config)
+    mapper = {
+
+    }
