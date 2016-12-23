@@ -21,7 +21,7 @@ def test():
     """
     raw = r"""
         {
-            "rule": "[attention:5:attention][critical:5:critical][status:5:status]",
+            "rule": "[attention:5:attention][unknown:10:][critical:5:critical][unknown:10:][status:5:status]",
             "tokens": {
                 "attention": ["(\\d+)\\s*关注", 0],
                 "critical": ["(\\d+)\\s*评论", 0],
@@ -29,7 +29,7 @@ def test():
                 "filter": "",
                 "replace": "",
                 "delimiter": "",
-                "unknown": ""
+                "unknown": "(这里是噪音|这里也是噪音)"
             }
         }
         """
@@ -38,7 +38,7 @@ def test():
     # \xe4\xb8\x80-\xe9\xbe\xa5
     pp = PathParser(raw)
     # path_parsers = pp.path_parsers
-    s = u"9 关注 8 评论 运营中"
+    s = u"9 关注 这里是噪音 8  评论 这里也是噪音 运营中"
     result = pp.parse(s)
     for k, v in result.iteritems():
         print k, v

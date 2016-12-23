@@ -13,6 +13,11 @@ path_parser 的阉割版,去除的功能:
 
 增加的功能:
     1, 分组功能
+
+update: 20161223
+  去除了多匹配的情况
+  原因: 多匹配功能和unknown的自动解析功能会出现逻辑上的冲突, 多匹配理论上可以支持多路径,
+    但维度上升高造成逻辑上的复杂,而且功能性并不高
 """
 
 import re
@@ -23,11 +28,15 @@ import pdb
 
 
 debug = False
+# debug = True
+
+
 class PathParser(object):
-    def __init__(self, raw, multi_match_flag=1):
+    def __init__(self, raw, multi_match_flag=0):
         self.raw = raw
         self._global_tokens = {}
         self.multi_match_flag = multi_match_flag  # 是否多field匹配
+        assert self.multi_match_flag==0, "only support single match!"
         self.path_parser = self.parse_path(raw)
 
     def parse_path(self, s):
@@ -40,7 +49,8 @@ class PathParser(object):
         path_tokens, path_tokens_dict = self._parse_path_rule(path_rule)
         path_tokens_regex = copy.deepcopy(global_tokens)
         # path_tokens_regex.update(path.get('tokens', {}))  # 去除全局tokens
-        for token_regex in path_tokens_dict:
+        for name in path_tokens_dict:
+            token_regex = path_tokens_dict[name][0]
             if token_regex not in path_tokens_regex:
                 raise Exception("no defination of token name:[{0}]".format(
                     token_regex))
@@ -54,14 +64,20 @@ class PathParser(object):
         tokens = []
         tokens_dict = OrderedDict()
         index = 1  # index 从1开始
+
+        unknown_index = 1
         for p in ps:
             pattern = p.groups()[0]
             regex_name, score, name = pattern.split(":")
             score = float(score)
             regex_name, name = regex_name.strip(), name.strip()
-            if not name: name = regex_name
+            if not name:
+                name = regex_name
+            if name == "unknown":
+                name = "{}_{}".format(name, unknown_index)
+            unknown_index += 1
             tokens.append((regex_name, score, name, index))
-            tokens_dict[regex_name] = (regex_name, score, name, index)
+            tokens_dict[name] = (regex_name, score, name, index)
             index += 1
 
         return tokens, tokens_dict
@@ -97,14 +113,15 @@ class PathParser(object):
         if filter_re:
             s = re.sub(filter_re, replace_re, s)
 
-        if debug: print s
         # delimiter
         delimiter = self._global_tokens.get("delimiter", ',')
-        if delimiter is not None:  # 说明不分组
+        if delimiter is not None:  # 说明不分组. 如果不写则为None, 但是如果写了但是没值, 则为空字符串
             s_split = re.split(delimiter, s)
         else:
             s_split = [s]
+
         s_split = filter(lambda x:x.strip(), s_split)
+        if debug: print s_split
         fields = [Field(text=s_sub) for s_sub in s_split]
 
         # parse
@@ -136,23 +153,34 @@ class PathParser(object):
         token_level_score_list = sorted(token_levels.iteritems(), key=lambda x:x[0], reverse=True)
 
         new_fields = copy.deepcopy(fields)
+        if debug:
+            num = 0
+            print new_fields
         for score, tokens in token_level_score_list:        # score从大到小的顺序
+            if debug:
+                print ">>> ", num, score
+                for token in tokens: print " ", token
+                num += 1
+                subnum = 0
+
             for token in tokens:                            # 从前往后的 顺序
                 (regex_name, score, name, index) = token
                 regex = path_tokens_regex[regex_name]
                 group_num = global_tokens_group_num[regex_name]
                 # 找到解析和替换的位置, 如果采用delimiter的话, 这个区间里面可能有多个值
+                # 根据 待解析的field 的index,找出相应的解析index区间
                 new_field_indexes = [t.index for t in new_fields]
                 field_indexes = find_field_indexes(new_field_indexes, index)
                 if not field_indexes:
                     continue
 
-                # pdb.set_trace()
                 if debug:
-                    for f in new_fields: print f
+                    print "  ", subnum, token
+                    for f in new_fields: print "    ", f
+                    subnum += 1
                 _local_fields = []
-                for index in field_indexes:
-                    _local_fields.append(new_fields[index])
+                for _index in field_indexes:
+                    _local_fields.append(new_fields[_index])
 
                 if self.multi_match_flag:
                     local_fields = self.multi_match_fields(_local_fields, regex, token, group_num)
@@ -229,7 +257,7 @@ class PathParser(object):
 
 
 def find_field_indexes(field_indexes, index):
-    # 两个解析的field之间有多个未解析的field的时候使用
+    # 根据index, 找出两个解析的field之间有多个未解析的field的时候使用
     targets = []
     start = None
     end = None
