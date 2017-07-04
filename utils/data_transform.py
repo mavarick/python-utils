@@ -22,8 +22,8 @@ default=0.0
 analysis=None
 
 parser = optparse.OptionParser()
-parser.add_option("-f", '--from', help='input file', dest='input_file', default="input.dat")
-parser.add_option("-o", '--out', help='to output file', dest='out_file', default='out.dat')
+parser.add_option("-i", '--input', help='input file', dest='input_file', default="input.dat")
+parser.add_option("-o", '--output', help='to output file', dest='out_file', default='out.dat')
 parser.add_option("-t", '--type', help='handling type: svm2matrix matrix2svm', 
     dest='handle_type', default='svm2matrix')
 parser.add_option("-s", '--sep', help='seperator', dest='sep', default='\t')
@@ -47,6 +47,18 @@ for k, v in options.iteritems():
         default=v
     if k == 'analysis':
         analysis = v  # true or none
+
+
+def usage():
+    USAGE = """
+Usage:
+    python [-i|--input] input [-o|--output] output [-t||--type] type [-s|--sep] seperator 
+
+Parameters:
+    transform:
+    describe:  
+"""
+
 
 def read_svm_file(input_file, sep='\t', default=(0.0)):
     '''read svm data file, with format:
@@ -76,12 +88,13 @@ def read_svm_file(input_file, sep='\t', default=(0.0)):
             f, v = item.split(":")
             features.add(f)
             feature_dict[k] = v
-        data.append((label, feature_dict)
+        data.append((label, feature_dict))
     features = list(features)
     features.sort()
     print("info>> Sample Cnt [{0}]".format(len(data)))
     print("info>> Feature Cnt [{0}]".format(len(features)))
-    return fetures, data
+    return features, data
+
 
 def dict2matrix(features, data, out_file, sep='\t', default=(0.0)):
     features, data = read_svm_file(input_file, sep=sep, default=default)
@@ -95,9 +108,11 @@ def dict2matrix(features, data, out_file, sep='\t', default=(0.0)):
             new_feature_list.append(v)
         print >>out, '\t'.join(new_feature_list)
 
+
 def svm2matrix(input_file, out_file, sep='\t', default=0.0):
     features, data = read_svm_file(input_file, sep=sep, default=default)
     dict2matrix(features, data, out_file, sep=sep, default=default)
+
 
 if handle_type == 'svm2matrix':
     svm2matrix(input_file, out_file, sep=sep, default=default)
