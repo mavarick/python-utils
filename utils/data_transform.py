@@ -75,16 +75,16 @@ def read_svm_file(input_file, sep='\t', default=(0.0)):
         for item in items[1:]:
             f, v = item.split(":")
             features.add(f)
-            feature_dict[k] = v
-        data.append((label, feature_dict)
+            feature_dict[f] = v
+        data.append((label, feature_dict))
     features = list(features)
     features.sort()
     print("info>> Sample Cnt [{0}]".format(len(data)))
     print("info>> Feature Cnt [{0}]".format(len(features)))
-    return fetures, data
+    return features, data
 
 def dict2matrix(features, data, out_file, sep='\t', default=(0.0)):
-    features, data = read_svm_file(input_file, sep=sep, default=default)
+    #features, data = read_svm_file(input_file, sep=sep, default=default)
     out = open(out_file, 'w')
     print >>out, '\t'.join(['label'] + features)
     for item in data:
@@ -92,7 +92,7 @@ def dict2matrix(features, data, out_file, sep='\t', default=(0.0)):
         new_feature_list = [label]
         for f in features:
             v = feature_dict.get(f, default)
-            new_feature_list.append(v)
+            new_feature_list.append(str(v))
         print >>out, '\t'.join(new_feature_list)
 
 def svm2matrix(input_file, out_file, sep='\t', default=0.0):

@@ -232,8 +232,9 @@ def PublicHouseAccDebt():
 
 #instraments()
 #HouseDebt()
-PublicHouseAccDebt()
+#PublicHouseAccDebt()
 
 
+print 12*AvgCapitalAndInterestRateWrap.calc_month_rate(50000.0, 4839.01, 12, 0.06)
 
 
