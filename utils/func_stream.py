@@ -25,9 +25,7 @@ class FuncStream(object):
             func_name = func.__name__
 
         def new_func(*extra_args):
-            new_args = list(self.args)
-            new_args.extend(extra_args)
-            self.args = [func(*new_args)]
+            self.args = [func(*(list(self.args) + list(extra_args)))]
             return self
 
         setattr(self, func_name, new_func)
