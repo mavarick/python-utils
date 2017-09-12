@@ -1,0 +1,43 @@
+[jobs]
+name=job1,job2
+
+[hadoop]
+hadoop_home=/home/work/hadoop-client/nmgrd/hadoop
+
+[pylib]
+name=foo
+
+[vars]
+username=MAVARICK
+BASE_OUT=hdfs://nmg01-global-hdfs.dmop.baidu.com:54310/user/kga-rec-rd/liuxufeng
+UE_FEATURE_BASE={{BASE_OUT}}/user_rec/features/ue_features
+date=shell(date +%Y%m%d)
+
+[job_default_opts]
+D__mapred.job.priority=VERY_HIGH
+D__mapred.job.map.capacity=1000
+D__stream.num.reduce.output.key.fields=1
+cacheArchive=hdfs://nmg01-global-hdfs.dmop.baidu.com:54310/user/kga-rec/lichuang01/libs/Jumbo.tar.gz#Jumbo
+
+[job1]
+D__mapred.job.name={{username}}_simple_mrjob_fm_job1_shell{date +%Y%m%d}_python{foo.get_job1_input_path()}
+D__mapred.reduce.tasks=10
+D__stream.num.reduce.output.key.fields=1
+input={{UE_FEATURE_BASE}}/20170531/part-00000,{{UE_FEATURE_BASE}}/20170601/part-00000
+output={{BASE_OUT}}/simple_mrjob_test/output1
+mapper=export PYTHONPATH=$PYTHONPATH:common && ./Jumbo/Jumbo/bin/python.sh calc_ue_cover.py mapper
+reducer="export PYTHONPATH=$PYTHONPATH:common && ./Jumbo/Jumbo/bin/python.sh calc_ue_cover.py reducer"
+# could be multiple files
+file=./ex/calc_ue_cover.py
+depend=
+
+[job2]
+D__mapred.job.name={{username}}_simple_mrjob_fm_job2
+D__mapred.reduce.tasks=1
+input={{job1##output}}
+output={{BASE_OUT}}/simple_mrjob_test/output2
+mapper=export PYTHONPATH=$PYTHONPATH:common && ./Jumbo/Jumbo/bin/python.sh calc_ue_cover_2.py mapper
+reducer=export PYTHONPATH=$PYTHONPATH:common && ./Jumbo/Jumbo/bin/python.sh calc_ue_cover_2.py reducer
+# could be multiple files
+file=./ex/calc_ue_cover_2.py
+depend=job1
