@@ -37,6 +37,21 @@ class StringCompare(object):
         s = map(self.to_utf8, s)
         return ''.join(s)
 
+    def lcs_len(self, s1, s2):
+        s1, s2 = self.to_unicode(s1), self.to_unicode(s2)
+        m = [[0 for x in range(len(s2) + 1)] for y in range(len(s1) + 1)]
+        for p1 in range(len(s1)):
+            for p2 in range(len(s2)):
+                if s1[p1] == s2[p2]:
+                    m[p1 + 1][p2 + 1] = m[p1][p2] + 1
+                elif m[p1 + 1][p2] > m[p1][p2 + 1]:
+                    m[p1 + 1][p2 + 1] = m[p1 + 1][p2]
+                else:
+                    m[p1 + 1][p2 + 1] = m[p1][p2 + 1]
+        return m[len(s1)][len(s2)]
+
+
+
     def to_unicode(self, s):
         if not isinstance(s, unicode):
             return s.decode("utf8")
