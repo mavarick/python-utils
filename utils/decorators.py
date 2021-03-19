@@ -39,6 +39,21 @@ def add_args(parse_func, default_val):
         return parse_func(*args, default_val=default_val)
     return parser
 
+import time
+
+class display_time(object):
+    def __init__(self, tag=""):
+        self.tag = tag
+        self.st = time.time()
+        
+    def __enter__(self):
+        return None
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        self.span = time.time() - self.st
+        print("[{}]time_used: {}".format(self.tag, self.span))
+        return True
+
 
 
 

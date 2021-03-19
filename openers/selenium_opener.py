@@ -12,9 +12,9 @@ import time
 
 import commands
 
-if __name__ == "__main__":
-    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    sys.path.append(base_path)
+#if __name__ == "__main__":
+#    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+#    sys.path.append(base_path)
 
 if __name__ == "__main__":
     PHANTOMJS_PATH = "./phantomjs-2.1.1-macosx/bin/phantomjs"
@@ -185,6 +185,7 @@ def test_2():
     import pdb
     sel_opener = SelOpener()
     url = "http://www.alexa.cn/index.php?url=baidu.com"
+    url = "https://m.toutiao.com/is/JC7EJNv/"
     page = sel_opener.open(url)
 
     pdb.set_trace()
